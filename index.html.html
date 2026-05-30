@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Startup Ops Health Check — Virtual Operators Guild</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --navy: #1B2D4F;
+    --navy-light: #243d6a;
+    --gold: #D4A847;
+    --gold-light: #F0C96A;
+    --cream: #FAF7F2;
+    --white: #FFFFFF;
+    --text-dark: #1B2D4F;
+    --text-mid: #4A5568;
+    --text-light: #718096;
+    --border: #E8E0D5;
+    --red: #C53030;
+    --amber: #B7791F;
+    --green: #276749;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0ece6;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .quiz-wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .quiz-header {
+    background: var(--navy);
+    border-radius: 12px 12px 0 0;
+    padding: 2rem 2rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .quiz-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border: 30px solid rgba(212,168,71,.15);
+    border-radius: 50%;
+  }
+  .quiz-brand { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); margin-bottom: .75rem; }
+  .quiz-title { font-size: 24px; font-weight: 700; color: var(--white); line-height: 1.2; margin-bottom: .5rem; }
+  .quiz-subtitle { font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.6; margin-bottom: 1.25rem; }
+  .quiz-meta { display: flex; gap: 16px; }
+  .quiz-meta-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: rgba(255,255,255,.5); }
+  .quiz-meta-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+
+  .progress-bar-wrap { background: var(--navy-light); height: 4px; }
+  .progress-bar { height: 4px; background: var(--gold); transition: width .4s ease; border-radius: 0 2px 2px 0; }
+
+  .quiz-body { background: var(--white); border-radius: 0 0 12px 12px; padding: 2rem; box-shadow: 0 8px 32px rgba(27,45,79,.12); }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .q-counter { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); margin-bottom: .5rem; }
+  .q-text { font-size: 17px; font-weight: 600; color: var(--text-dark); line-height: 1.4; margin-bottom: 1.5rem; }
+  .q-context { font-size: 12px; color: var(--text-light); margin-bottom: 1.25rem; margin-top: -.75rem; font-style: italic; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: .875rem 1rem; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .2s; background: var(--white); }
+  .option:hover { border-color: var(--navy); background: #f8f9ff; }
+  .option.selected { border-color: var(--navy); background: #EEF1F8; }
+  .option-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; margin-top: 1px; transition: all .2s; display: flex; align-items: center; justify-content: center; }
+  .option.selected .option-radio { border-color: var(--navy); background: var(--navy); }
+  .option.selected .option-radio::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: white; }
+  .option-text { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+  .option.selected .option-text { color: var(--text-dark); font-weight: 500; }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; }
+  .btn { font-family: inherit; font-size: 13px; font-weight: 600; padding: .75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+  .btn-gold { background: var(--gold); color: var(--navy); font-weight: 700; }
+  .btn-gold:hover { background: var(--gold-light); }
+
+  .intro-icon { font-size: 36px; margin-bottom: 1rem; }
+  .intro-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: .75rem; line-height: 1.3; }
+  .intro-text { font-size: 14px; color: var(--text-mid); line-height: 1.7; margin-bottom: 1.5rem; }
+  .intro-list { margin-bottom: 1.5rem; }
+  .intro-list-item { display: flex; align-items: flex-start; gap: 10px; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-mid); }
+  .intro-list-item:last-child { border-bottom: none; }
+  .intro-check { color: var(--gold); font-weight: 700; flex-shrink: 0; }
+
+  .email-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: .5rem; }
+  .email-sub { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-bottom: 1.5rem; }
+  .email-input, .email-name { width: 100%; padding: .875rem 1rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--text-dark); margin-bottom: .75rem; outline: none; transition: border-color .2s; }
+  .email-input:focus, .email-name:focus { border-color: var(--navy); }
+  .email-disclaimer { font-size: 11px; color: var(--text-light); text-align: center; margin-top: .5rem; }
+
+  .result-header { text-align: center; padding: 1.5rem 0 1rem; }
+  .result-score-ring { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; flex-direction: column; border: 6px solid; }
+  .result-score-num { font-size: 28px; font-weight: 700; line-height: 1; }
+  .result-score-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .result-grade { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .5rem; }
+  .result-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: .5rem; line-height: 1.3; }
+  .result-desc { font-size: 13px; color: var(--text-mid); line-height: 1.7; margin-bottom: 1.5rem; }
+
+  .result-breakdown { margin-bottom: 1.5rem; }
+  .breakdown-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-light); margin-bottom: .75rem; }
+  .breakdown-item { margin-bottom: .75rem; }
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: .25rem; }
+  .breakdown-name { font-size: 12px; font-weight: 500; color: var(--text-dark); }
+  .breakdown-val { font-size: 11px; font-weight: 600; }
+  .breakdown-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .breakdown-bar { height: 100%; border-radius: 3px; transition: width .8s ease; }
+
+  .result-cta { background: var(--navy); border-radius: 10px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
+  .result-cta-title { font-size: 16px; font-weight: 700; color: white; margin-bottom: .5rem; }
+  .result-cta-text { font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.6; margin-bottom: 1rem; }
+
+  .theme-red .result-score-ring { border-color: #FC8181; }
+  .theme-red .result-score-num, .theme-red .result-score-label, .theme-red .result-grade { color: var(--red); }
+  .theme-amber .result-score-ring { border-color: #F6AD55; }
+  .theme-amber .result-score-num, .theme-amber .result-score-label, .theme-amber .result-grade { color: var(--amber); }
+  .theme-green .result-score-ring { border-color: #68D391; }
+  .theme-green .result-score-num, .theme-green .result-score-label, .theme-green .result-grade { color: var(--green); }
+
+  @media(max-width: 480px) {
+    .quiz-header { padding: 1.5rem; }
+    .quiz-body { padding: 1.5rem; }
+    .quiz-title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="quiz-wrap">
+  <div class="quiz-header">
+    <div class="quiz-brand">Virtual Operators Guild · Fiona Sonza</div>
+    <div class="quiz-title">The Startup Ops<br>Health Check</div>
+    <div class="quiz-subtitle">Diagnose the operational health of your business in under 5 minutes.</div>
+    <div class="quiz-meta">
+      <div class="quiz-meta-item"><div class="quiz-meta-dot"></div>10 questions</div>
+      <div class="quiz-meta-item"><div class="quiz-meta-dot"></div>5 minutes</div>
+      <div class="quiz-meta-item"><div class="quiz-meta-dot"></div>Free results + recommendations</div>
+    </div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="screen active" id="screen-intro">
+      <div class="intro-icon">🏢</div>
+      <div class="intro-title">Is your business running you — or are you running it?</div>
+      <div class="intro-text">Most founders don't realize their operations are broken until growth stalls, key people leave, or they can't take a single day off without something falling apart.<br><br>This assessment diagnoses exactly where your ops are strong, where they're leaking, and what to fix first.</div>
+      <div class="intro-list">
+        <div class="intro-list-item"><span class="intro-check">✓</span>Systems & SOPs — are your processes documented and repeatable?</div>
+        <div class="intro-list-item"><span class="intro-check">✓</span>Team structure — does your team know what to do without you?</div>
+        <div class="intro-list-item"><span class="intro-check">✓</span>Communication — is information flowing or getting lost?</div>
+        <div class="intro-list-item"><span class="intro-check">✓</span>Hiring & onboarding — are you bringing in the right people the right way?</div>
+        <div class="intro-list-item"><span class="intro-check">✓</span>Metrics — do you know your business's health at a glance?</div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="width:100%">Start the Assessment →</button>
+    </div>
+
+    <div class="screen" id="screen-questions">
+      <div class="q-counter" id="qCounter">Question 1 of 10</div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-context" id="qContext"></div>
+      <div class="options" id="optionsWrap"></div>
+      <div class="nav">
+        <button class="btn btn-ghost" id="btnBack" onclick="prevQ()">← Back</button>
+        <button class="btn btn-primary" id="btnNext" onclick="nextQ()" disabled>Next →</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-email">
+      <div class="email-title">Your results are ready. 🎉</div>
+      <div class="email-sub">Enter your details below and I'll send your full Ops Health Report — including a personalised breakdown of your scores and the top 3 things to fix first in your business.</div>
+      <input type="text" class="email-name" id="userName" placeholder="Your first name" />
+      <input type="email" class="email-input" id="userEmail" placeholder="Your work email address" />
+      <button class="btn btn-gold" onclick="showResults()" style="width:100%;margin-bottom:.5rem">Show My Results →</button>
+      <div class="email-disclaimer">No spam. Just your results and one follow-up from Fiona.</div>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <div class="result-header" id="resultHeader"></div>
+      <div class="result-breakdown" id="resultBreakdown"></div>
+      <div class="result-cta" id="resultCta"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const questions = [
+  { text: "If a key team member left tomorrow, what would happen to their responsibilities?", context: "Think about your most critical team member — not you.", category: "Systems", options: [{ text: "Everything would stop — no one else knows what they do", score: 0 }, { text: "We'd figure it out but it would take weeks to recover", score: 1 }, { text: "We have some notes but nothing formal — it would be messy", score: 2 }, { text: "We have documented processes — someone else could step in within days", score: 3 }] },
+  { text: "How does your team know what their priorities are each week?", context: "Be honest about what actually happens, not what you intend.", category: "Communication", options: [{ text: "They ask me — I'm the source of all direction", score: 0 }, { text: "We have informal conversations but nothing structured", score: 1 }, { text: "We have weekly check-ins but priorities often shift mid-week", score: 2 }, { text: "We have a clear weekly rhythm — everyone knows what they're working on and why", score: 3 }] },
+  { text: "How do new team members learn how to do their job?", context: "Think about the last person you hired.", category: "Systems", options: [{ text: "They follow me around and watch what I do", score: 0 }, { text: "A colleague shows them — informally", score: 1 }, { text: "We have some training materials but onboarding is inconsistent", score: 2 }, { text: "We have a structured onboarding process they can follow independently", score: 3 }] },
+  { text: "Can you take a full week off without your business having a problem?", context: "Not a vacation where you check Slack every hour — a real week off.", category: "Team", options: [{ text: "Absolutely not — things would fall apart", score: 0 }, { text: "Probably not — I'd need to be available for decisions", score: 1 }, { text: "Maybe — but I'd come back to a mess", score: 2 }, { text: "Yes — my team can handle things without me for a week", score: 3 }] },
+  { text: "How do you track whether your team is performing well?", category: "Metrics", options: [{ text: "I can feel when things are going well or badly — no formal tracking", score: 0 }, { text: "I check in with people regularly but don't have formal metrics", score: 1 }, { text: "We track some metrics but they're not reviewed consistently", score: 2 }, { text: "We have clear KPIs and a dashboard I review weekly", score: 3 }] },
+  { text: "When something goes wrong in your business, what usually happens?", category: "Systems", options: [{ text: "It comes to me and I fix it — every time", score: 0 }, { text: "The team tries to fix it but often makes it worse without me", score: 1 }, { text: "We fix the problem but never address why it happened", score: 2 }, { text: "We fix it, document the root cause, and update our process so it doesn't happen again", score: 3 }] },
+  { text: "How clearly defined are the roles and responsibilities in your team?", category: "Team", options: [{ text: "Everyone does a bit of everything — there are no clear roles", score: 0 }, { text: "People roughly know what they do but there's a lot of overlap and confusion", score: 1 }, { text: "We have job titles but responsibilities aren't formally documented", score: 2 }, { text: "Every role has a clear job description and defined responsibilities", score: 3 }] },
+  { text: "How does important information move through your business?", category: "Communication", options: [{ text: "It doesn't — people find out things randomly or too late", score: 0 }, { text: "Through me — I'm the hub of all communication", score: 1 }, { text: "We use chat tools but important things get buried or missed", score: 2 }, { text: "We have structured communication channels and everyone knows where to find information", score: 3 }] },
+  { text: "When you hire someone new, how confident are you that they're the right person?", category: "Team", options: [{ text: "Not confident — we've made bad hires and didn't know until it was too late", score: 0 }, { text: "Somewhat — we go on gut feel and interviews", score: 1 }, { text: "Reasonably confident — we have some process but it's not consistent", score: 2 }, { text: "Very confident — we have a structured hiring and assessment process", score: 3 }] },
+  { text: "How well does your business perform when you are at your least involved?", context: "During a busy period, travel, or when you're focused on something else entirely.", category: "Team", options: [{ text: "It slows down or stops — I am the business", score: 0 }, { text: "It gets by but quality suffers noticeably", score: 1 }, { text: "It keeps moving but I come back to issues that needed my input", score: 2 }, { text: "It runs well — my team makes good decisions without me", score: 3 }] }
+];
+
+const categories = ["Systems", "Communication", "Team", "Metrics"];
+let current = 0;
+let answers = new Array(10).fill(null);
+let userName = '';
+
+function startQuiz() { showScreen('questions'); renderQuestion(); updateProgress(); }
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById('qCounter').textContent = `Question ${current + 1} of ${questions.length}`;
+  document.getElementById('qText').textContent = q.text;
+  document.getElementById('qContext').textContent = q.context || '';
+  document.getElementById('qContext').style.display = q.context ? 'block' : 'none';
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (answers[current] === i ? ' selected' : '');
+    div.innerHTML = `<div class="option-radio"></div><div class="option-text">${opt.text}</div>`;
+    div.onclick = () => selectOption(i);
+    wrap.appendChild(div);
+  });
+  document.getElementById('btnBack').style.visibility = current === 0 ? 'hidden' : 'visible';
+  document.getElementById('btnNext').textContent = current === questions.length - 1 ? 'See My Results →' : 'Next →';
+  document.getElementById('btnNext').disabled = answers[current] === null;
+}
+
+function selectOption(i) {
+  answers[current] = i;
+  document.querySelectorAll('.option').forEach((el, idx) => { el.classList.toggle('selected', idx === i); });
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQ() {
+  if (answers[current] === null) return;
+  if (current < questions.length - 1) { current++; renderQuestion(); updateProgress(); }
+  else { showScreen('email'); updateProgress(true); }
+}
+
+function prevQ() { if (current > 0) { current--; renderQuestion(); updateProgress(); } }
+function updateProgress(done) { document.getElementById('progressBar').style.width = (done ? 100 : (current / questions.length) * 100) + '%'; }
+
+function showResults() {
+  const name = document.getElementById('userName').value.trim() || 'there';
+  userName = name;
+  const catScores = {}; const catMax = {};
+  categories.forEach(c => { catScores[c] = 0; catMax[c] = 0; });
+  questions.forEach((q, i) => {
+    const selected = answers[i] !== null ? answers[i] : 0;
+    catScores[q.category] += q.options[selected].score;
+    catMax[q.category] += 3;
+  });
+  const totalScore = Object.values(catScores).reduce((a, b) => a + b, 0);
+  const pct = Math.round((totalScore / 30) * 100);
+  let theme, grade, title, desc, ctaText;
+  if (pct <= 33) {
+    theme = 'red'; grade = 'Critical — Immediate Action Needed';
+    title = `${name}, your business is running on you — not on systems.`;
+    desc = `Your score of ${pct}% indicates your operations are in a critical state. Almost everything depends on your personal involvement, which means your business can't scale and you can't step away. The good news: this is completely fixable. You don't need a massive overhaul — you need the right operator and the right systems, built in the right order.`;
+    ctaText = "Your ops need immediate attention. Let's talk about what a 30-day ops reset looks like for your business.";
+  } else if (pct <= 66) {
+    theme = 'amber'; grade = 'Developing — Strong Foundation Needed';
+    title = `${name}, you have the pieces — but they're not connected yet.`;
+    desc = `Your score of ${pct}% shows a business that's functioning but fragile. You've built some structure, but there are clear gaps that will become bigger problems as you grow. The team is dependent on informal knowledge, communication is inconsistent, and your systems aren't strong enough to survive the next stage of scale.`;
+    ctaText = "You're at the tipping point between controlled growth and operational chaos. Let's build the infrastructure that takes you to the next level.";
+  } else {
+    theme = 'green'; grade = 'Strong — Optimize for Scale';
+    title = `${name}, your operational foundation is solid. Now let's scale it.`;
+    desc = `Your score of ${pct}% puts you in the top tier of operational health for a scaling startup. Your team has clarity, your systems are documented, and your business can function without you in the room. The opportunity now is to optimize — tighten your metrics, upgrade your talent, and build the infrastructure for the next stage of growth.`;
+    ctaText = "Strong ops are a competitive advantage. Let's make yours exceptional.";
+  }
+  const header = document.getElementById('resultHeader');
+  header.className = `result-header theme-${theme}`;
+  header.innerHTML = `<div class="result-score-ring"><div class="result-score-num">${pct}%</div><div class="result-score-label">Health</div></div><div class="result-grade">${grade}</div><div class="result-title">${title}</div><div class="result-desc">${desc}</div>`;
+  const catColors = { Systems: '#3B8BD4', Communication: '#534AB7', Team: '#3B6D11', Metrics: '#BA7517' };
+  document.getElementById('resultBreakdown').innerHTML = `<div class="breakdown-title">Your scores by area</div>` + categories.map(cat => {
+    const p = Math.round((catScores[cat] / catMax[cat]) * 100);
+    const label = p <= 33 ? 'Needs work' : p <= 66 ? 'Developing' : 'Strong';
+    const labelColor = p <= 33 ? '#C53030' : p <= 66 ? '#B7791F' : '#276749';
+    return `<div class="breakdown-item"><div class="breakdown-row"><div class="breakdown-name">${cat}</div><div class="breakdown-val" style="color:${labelColor}">${label}</div></div><div class="breakdown-bar-bg"><div class="breakdown-bar" style="width:${p}%;background:${catColors[cat]}"></div></div></div>`;
+  }).join('');
+  const email = document.getElementById('userEmail').value.trim();
+  document.getElementById('resultCta').innerHTML = `<div class="result-cta-title">What's next for your business?</div><div class="result-cta-text">${ctaText}<br><br>Book a free 30-minute Ops Strategy Call with Fiona — walk away with clarity on your top 3 ops priorities and what to fix first.</div><button class="btn btn-gold" onclick="window.open('mailto:fiona@virtualoperatorsguild.com?subject=Ops Strategy Call Request&body=Hi Fiona, I just completed the Startup Ops Health Check and scored ${pct}%. I would love to book a free strategy call.')" style="width:100%;margin-bottom:.75rem">Book My Free Ops Strategy Call →</button><div style="font-size:11px;color:rgba(255,255,255,.5)">No commitment. 30 minutes. Actionable advice you can use immediately.</div>`;
+  showScreen('results');
+  updateProgress(true);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+</script>
+</body>
+</html>
