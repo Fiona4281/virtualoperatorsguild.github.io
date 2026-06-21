@@ -287,9 +287,11 @@ function showResults() {
     desc = `Your score of ${pct}% puts you in the top tier of operational health for a scaling startup. Your team has clarity, your systems are documented, and your business can function without you in the room. The opportunity now is to optimize — tighten your metrics, upgrade your talent, and build the infrastructure for the next stage of growth.`;
     ctaText = "Strong ops are a competitive advantage. Let's make yours exceptional.";
   }
+
   const header = document.getElementById('resultHeader');
   header.className = `result-header theme-${theme}`;
   header.innerHTML = `<div class="result-score-ring"><div class="result-score-num">${pct}%</div><div class="result-score-label">Health</div></div><div class="result-grade">${grade}</div><div class="result-title">${title}</div><div class="result-desc">${desc}</div>`;
+
   const catColors = { Systems: '#3B8BD4', Communication: '#534AB7', Team: '#3B6D11', Metrics: '#BA7517' };
   document.getElementById('resultBreakdown').innerHTML = `<div class="breakdown-title">Your scores by area</div>` + categories.map(cat => {
     const p = Math.round((catScores[cat] / catMax[cat]) * 100);
@@ -297,11 +299,18 @@ function showResults() {
     const labelColor = p <= 33 ? '#C53030' : p <= 66 ? '#B7791F' : '#276749';
     return `<div class="breakdown-item"><div class="breakdown-row"><div class="breakdown-name">${cat}</div><div class="breakdown-val" style="color:${labelColor}">${label}</div></div><div class="breakdown-bar-bg"><div class="breakdown-bar" style="width:${p}%;background:${catColors[cat]}"></div></div></div>`;
   }).join('');
-  const email = document.getElementById('userEmail').value.trim();
-  document.getElementById('resultCta').innerHTML = `<div class="result-cta-title">What's next for your business?</div><div class="result-cta-text">${ctaText}<br><br>\Apply for My Ops Diagnostic →</button><div style="font-size:11px;color:rgba(255,255,255,.5)">Limited to 3 founders per week — by application only.</div><button class="btn btn-gold" onclick="window.open('onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScU_QE1CEnWFT0kg0B8ZIgRQNhsSquKrcpkgoHKmsaV6Pjyhw/viewform?usp=sf_link')"?subject=Ops Strategy Call Request&body=Hi Fiona, I just completed the Startup Ops Health Check and scored ${pct}%. I would love to book a free strategy call.')" style="width:100%;margin-bottom:.75rem">Book My Free Ops Strategy Call →</button><div style="font-size:11px;color:rgba(255,255,255,.5)">No commitment. 30 minutes. Actionable advice you can use immediately.</div>`;
+
+  document.getElementById('resultCta').innerHTML = `
+    <div class="result-cta-title">What's next for your business?</div>
+    <div class="result-cta-text">${ctaText}</div>
+    <button class="btn btn-gold" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScU_QE1CEnWFT0kg0B8ZIgRQNhsSquKrcpkgoHKmsaV6Pjyhw/viewform?usp=sf_link','_blank')" style="width:100%;margin-bottom:.75rem">Apply for My Ops Diagnostic →</button>
+    <div style="font-size:11px;color:rgba(255,255,255,.5)">Limited to 3 founders per week — by application only.</div>
+  `;
+
   showScreen('results');
   updateProgress(true);
 }
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
